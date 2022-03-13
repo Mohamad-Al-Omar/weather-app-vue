@@ -28,9 +28,7 @@
           <div @click="innerClick">
             I am a popup
             <p v-show="showParagraph">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque
-              sed pretium nisl, ut sagittis sapien. Sed vel sollicitudin nisi.
-              Donec finibus semper metus id malesuada.
+                I am a long paragraph
             </p>
           </div>
         </l-popup>
@@ -40,9 +38,7 @@
           <div @click="innerClick">
             I am a tooltip
             <p v-show="showParagraph">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque
-              sed pretium nisl, ut sagittis sapien. Sed vel sollicitudin nisi.
-              Donec finibus semper metus id malesuada.
+                I am a long paragraph
             </p>
           </div>
         </l-tooltip>
