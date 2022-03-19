@@ -2,9 +2,11 @@
   <v-container>
     <v-row>
       <v-col cols="12">
-        <div class="text-h1 text-center">Weather App</div>
+        <div class="text-h1 text-center font-weight-medium">Weather App</div>
       </v-col>
-      <leaflet-map />
+      <v-col cols="12 mt-5">
+        <leaflet-map />
+      </v-col>
     </v-row>
   </v-container>
 </template>
