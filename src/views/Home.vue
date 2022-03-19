@@ -1,24 +1,23 @@
 <template>
-  <div class="home">
-    <v-container>
-      <v-row>
-        <div class="title">
-          Weather App 
-        </div>
-        <leaflet-map/>
-      </v-row>
-    </v-container>
-  </div>
+  <v-container>
+    <v-row>
+      <v-col cols="12">
+        <div class="text-h1 text-center">Weather App</div>
+      </v-col>
+      <leaflet-map />
+    </v-row>
+  </v-container>
 </template>
 
 <script>
 // @ is an alias to /src
-import LeafletMap from '@/components/LeafletMap.vue';
+import LeafletMap from "@/components/LeafletMap.vue";
 
 export default {
-  name: 'Home',
+  name: "Home",
   components: {
-    LeafletMap
-  }
-}
+    LeafletMap,
+  },
+};
 </script>
+<style lang="scss"></style>
