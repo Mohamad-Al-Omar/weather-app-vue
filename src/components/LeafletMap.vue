@@ -1,41 +1,47 @@
 <template>
   <div style="height: 500px; width: 100%">
-    <!-- <div style="height: 200px; overflow: auto;">
-      <p>First marker is placed at {{ withPopup.lat }}, {{ withPopup.lng }}</p>
-      <p>Center is at {{ currentCenter }} and the zoom is: {{ currentZoom }}</p>
-      <button @click="showLongText">
-        Toggle long popup
-      </button>
-      <button @click="showMap = !showMap">
-        Toggle map
-      </button>
-    </div> -->
     <l-map
       v-if="showMap"
+      ref="map"
       :zoom="zoom"
       :center="center"
       :options="mapOptions"
       style="height: 80%"
+      @ready="onMapReady"
+      @locationfound="onLocationFound"
       @update:center="centerUpdate"
       @update:zoom="zoomUpdate"
       @click="addMarker"
     >
       <l-tile-layer :url="url" :attribution="attribution" />
-      <l-marker :lat-lng="withPopup">
-        <l-popup>
-          <div @click="innerClick">
-            I am a popup
-            <p v-show="showParagraph">I am a long paragraph</p>
-          </div>
+      <l-control position="topleft">
+        <v-btn @click="clickHandler" class="pa-1" style="min-width: 24px">
+          <v-icon>mdi-crosshairs-gps</v-icon>
+        </v-btn>
+      </l-control>
+      <l-marker
+        ref="marker"
+        :lat-lng="markerLatLng"
+        v-if="showMarker"
+        @ready="onMarkerReady"
+      >
+        <l-popup ref="popup">
+          <v-list class="pa-0">
+            <v-list-item three-line class="pa-0">
+              <v-list-item-content>
+                <v-list-item-title class="mb-1 text-wrap">
+                  <strong>City:</strong> {{ cityName }}
+                </v-list-item-title>
+                <v-list-item-title class="text-wrap">
+                  <strong>Country:</strong> {{ countryName }}
+                </v-list-item-title>
+                <v-list-item-title class="text-wrap">
+                  <strong>Weather:</strong> {{ weather }}
+                </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
         </l-popup>
-      </l-marker>
-      <l-marker :lat-lng="withTooltip">
-        <l-tooltip :options="{ permanent: true, interactive: true }">
-          <div @click="innerClick">
-            I am a tooltip
-            <p v-show="showParagraph">I am a long paragraph</p>
-          </div>
-        </l-tooltip>
       </l-marker>
     </l-map>
   </div>
@@ -43,7 +49,7 @@
 
 <script>
 import { latLng } from "leaflet";
-import { LMap, LTileLayer, LMarker, LPopup, LTooltip } from "vue2-leaflet";
+import { LMap, LTileLayer, LMarker, LPopup, LControl } from "vue2-leaflet";
 export default {
   name: "Map",
   components: {
@@ -51,43 +57,106 @@ export default {
     LTileLayer,
     LMarker,
     LPopup,
-    LTooltip,
+    LControl,
   },
   data() {
     return {
-      zoom: 13,
-      center: latLng(47.41322, -1.219482),
+      map: null,
+      marker: null,
+      popup: null,
+      zoom: 12,
+      center: latLng(25.253390580642623, 55.29796600341797),
       url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       attribution:
         '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-      withPopup: latLng(47.41322, -1.219482),
-      withTooltip: latLng(47.41422, -1.250482),
-      currentZoom: 11.5,
-      currentCenter: latLng(47.41322, -1.219482),
-      showParagraph: false,
+      markerLatLng: latLng(47.41422, -1.250482),
+      currentZoom: 13,
+      currentCenter: latLng(25.253390580642623, 55.29796600341797),
+      showMarker: false,
+      userLocation: "",
+      cityName: "",
+      countryName: "",
+      weather: "",
       mapOptions: {
         zoomSnap: 0.5,
       },
       showMap: true,
     };
   },
+  mounted() {
+    this.$nextTick(() => {
+      // this.popup.openPopup();
+    });
+  },
   methods: {
+    clickHandler() {
+      this.map.panTo(this.userLocation);
+    },
+    onMapReady(mapObject) {
+      mapObject.locate();
+      this.map = mapObject;
+    },
+    onMarkerReady(mapObject) {
+      this.marker = mapObject;
+    },
+    onLocationFound(location) {
+      this.userLocation = location.latlng;
+      this.map.panTo(this.userLocation);
+    },
     zoomUpdate(zoom) {
       this.currentZoom = zoom;
     },
     centerUpdate(center) {
       this.currentCenter = center;
     },
-    showLongText() {
-      this.showParagraph = !this.showParagraph;
-    },
-    innerClick() {
-      alert("Click!");
-    },
     addMarker(event) {
-      console.log(event.latlng);
-      console.log(event.latlng.lat);
-      console.log(event.latlng.lng);
+      this.showMarker = true;
+      const latlng = event.latlng;
+      const lat = latlng.lat;
+      const lng = latlng.lng;
+      console.log(lat, lng);
+      this.markerLatLng = latLng(lat, lng);
+      const locationApi =
+        "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" +
+        lat +
+        "&lon=" +
+        lng;
+      const weatherApi =
+        "https://api.openweathermap.org/data/2.5/weather?lat=" +
+        lat +
+        "&lon=" +
+        lng +
+        "&appid=c50004d24015a979a7e5a7e84355b95d&units=metric";
+      this.$http
+        .get(locationApi)
+        .then((response) => {
+          console.log(response);
+          if (response.data.error !== undefined) {
+            this.cityName = "";
+            this.countryName = "";
+            this.weather = "";
+            return;
+          } else {
+            this.cityName = response.data.address.city;
+            this.countryName = response.data.address.country;
+          }
+          this.cityName = response.data.address.state;
+          this.countryName = response.data.address.country;
+          this.$http
+            .get(weatherApi)
+            .then((response) => {
+              console.log(response);
+              this.weather = response.data.main.temp;
+              console.log(this.marker);
+              this.marker.openPopup();
+            })
+            .catch((error) => {
+              console.log(error);
+            });
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
   },
 };
